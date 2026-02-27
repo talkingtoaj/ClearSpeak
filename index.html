@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClearSpeak MVP</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero card">
+        <h1>ClearSpeak</h1>
+        <p class="sub">Build clearer, more understandable English pronunciation step by step.</p>
+      </header>
+
+      <section class="card intro">
+        <h2>How this practice helps</h2>
+        <p>
+          This activity helps you train speech clarity. You hear a phrase, say it aloud, and get immediate feedback.
+          Repeating successful attempts helps lock in mouth movement patterns, and later review checks help you retain
+          what you learned.
+        </p>
+        <h3>Your task</h3>
+        <ol>
+          <li>Click <strong>Play Phrase</strong> to hear the model phrase.</li>
+          <li>Click <strong>Record</strong> to start. Click <strong>Stop</strong> when finished (it may also stop automatically once speech is captured).</li>
+          <li>Read the feedback and try again as needed.</li>
+          <li>Track your overall improvement in the progress panel.</li>
+        </ol>
+        <p class="small-note">Tip: Speak naturally and clearly, not too fast.</p>
+      </section>
+
+      <section class="card">
+        <h2 id="modeLabel">Practice Phrase</h2>
+        <p><strong>Target phrase:</strong> <span id="targetText"></span></p>
+
+        <div class="controls">
+          <button id="playBtn">🔊 Play Phrase</button>
+          <label>
+            Voice:
+            <select id="voiceSelect"></select>
+          </label>
+          <button id="recordBtn">🎙️ Record</button>
+          <button id="stopBtn" class="secondary" disabled>⏹ Stop</button>
+          <span id="recordingBadge" class="recording-badge idle">Not recording</span>
+        </div>
+
+        <p><strong>You said:</strong> <span id="spokenText">(waiting)</span></p>
+        <div id="feedbackBox" class="feedback-box"></div>
+        <div id="legend" class="legend hidden">
+          <p><span class="dot good"></span> Green = matched words</p>
+          <p><span class="dot miss"></span> Red [word] = expected word was missing</p>
+          <p><span class="dot extra"></span> Purple (word) = extra word was detected</p>
+        </div>
+        <p class="hint" id="hintText">Tip appears after your first try.</p>
+        <p id="statusText"></p>
+        <p id="streakText"></p>
+      </section>
+
+      <section class="card">
+        <h2>Your Progress</h2>
+        <div class="progress-wrap">
+          <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <p id="progressSummary">Current clarity score: 0%</p>
+        <p id="intelligibilityText">Level: Emerging — early stage, keep practicing to improve consistency.</p>
+        <p>Total attempts: <span id="totalAttempts">0</span></p>
+        <p>Review check-ins available now: <span id="reviewsDue">0</span></p>
+      </section>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,183 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, Arial, sans-serif;
+  background: linear-gradient(180deg, #eef4ff 0%, #f7faff 100%);
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 18px 40px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 24px rgba(29, 55, 110, 0.08);
+  border: 1px solid #ebf0ff;
+}
+
+.hero {
+  background: linear-gradient(120deg, #2a64f6, #5f8dff);
+  color: white;
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 0;
+}
+
+.sub {
+  margin-bottom: 0;
+  opacity: 0.95;
+}
+
+.intro ol {
+  padding-left: 20px;
+}
+
+.small-note {
+  color: #365;
+  font-size: 0.92rem;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #2a64f6;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #1e4dc4;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: #6f7da3;
+}
+
+.secondary:hover {
+  background: #596689;
+}
+
+.feedback-box {
+  min-height: 30px;
+  background: #f7faff;
+  border: 1px solid #e4ecff;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.hint {
+  background: #eef4ff;
+  padding: 10px;
+  border-left: 4px solid #2a64f6;
+  border-radius: 6px;
+}
+
+.diff-correct {
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+.diff-missing {
+  color: #c62828;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.diff-extra {
+  color: #6a1b9a;
+  font-weight: 600;
+}
+
+.legend {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #47577f;
+}
+
+.legend p {
+  margin: 3px 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.dot.good { background: #1b5e20; }
+.dot.miss { background: #c62828; }
+.dot.extra { background: #6a1b9a; }
+
+.hidden {
+  display: none;
+}
+
+.recording-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.recording-badge.idle {
+  background: #eef1f7;
+  color: #495b85;
+}
+
+.recording-badge.live {
+  background: #ffe5e5;
+  color: #b71c1c;
+  animation: pulse 1.1s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.progress-wrap {
+  height: 16px;
+  width: 100%;
+  background: #eaf0ff;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #d97706;
+  transition: width 0.3s ease, background 0.3s ease;
+}

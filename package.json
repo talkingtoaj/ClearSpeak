@@ -1,0 +1,10 @@
+{
+  "name": "pronunce-asr",
+  "version": "1.0.0",
+  "description": "ASR-driven pronunciation trainer MVP",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "test": "node --test"
+  }
+}

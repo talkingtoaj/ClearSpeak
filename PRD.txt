@@ -1,0 +1,395 @@
+Below is a **concise but realistic Product Requirements Document (PRD)** for the improved pronunciation app — written in a format a startup or AI product team could actually execute against.
+
+I’ll keep it **engineering-grounded**, **research-aligned**, and focused on *high pedagogical ROI with minimal implementation complexity*.
+
+---
+
+# PRD — ASR-Driven Pronunciation Training App (Pedagogically Enhanced)
+
+## 1. Product Overview
+
+### Product Name
+
+*(Working title)*: ClearSpeak
+
+### Product Vision
+
+Enable second-language learners to improve spoken intelligibility through high-frequency pronunciation practice enhanced by lightweight, research-aligned feedback mechanisms.
+
+### Core Insight
+
+ASR repetition alone produces practice but limited learning transfer.
+Adding **diagnosable feedback, variability, and spaced reinforcement** significantly increases pedagogical effectiveness without requiring complex speech modeling.
+
+---
+
+## 2. Problem Statement
+
+Most pronunciation apps:
+
+* provide repetition drills
+* rely on ASR correctness
+* lack actionable feedback
+* show weak transfer to spontaneous speech
+
+Learners therefore:
+
+* plateau quickly
+* optimize for machine recognition
+* fail to generalize pronunciation improvements.
+
+---
+
+## 3. Goals & Success Criteria
+
+### Primary Goal
+
+Improve learner intelligibility through scalable AI-mediated pronunciation practice.
+
+### Pedagogical Success Metrics
+
+(Research-aligned)
+
+| Metric                           | Target                      |
+| -------------------------------- | --------------------------- |
+| Phrase recognition success rate  | ↑ over sessions             |
+| Retention after delay            | ≥70% recall success         |
+| Transfer success (new sentences) | ≥50% first-pass recognition |
+| User retry persistence           | +20% vs baseline            |
+| Session completion               | +15%                        |
+
+---
+
+## 4. Target Users
+
+### Primary
+
+Adult L2 learners (A2–B2 CEFR equivalent).
+
+### Secondary
+
+Self-directed learners preparing for:
+
+* immigration
+* workplace communication
+* conversational fluency.
+
+---
+
+## 5. Core User Journey
+
+1. User hears phrase.
+2. User records attempt.
+3. ASR evaluates speech.
+4. App provides diagnostic feedback.
+5. User retries.
+6. Success achieved.
+7. Variation challenge.
+8. Phrase scheduled for spaced retry later.
+
+---
+
+## 6. Key Product Principles
+
+Derived from SLA meta-analyses:
+
+1. Practice must be **high frequency**
+2. Feedback must be **diagnosable**
+3. Learning must include **variability**
+4. Skills must be **retested after delay**
+5. Success should reflect **intelligibility**, not native accuracy
+
+---
+
+# 7. Features (MVP Scope)
+
+---
+
+## Feature 1 — ASR Pronunciation Loop (Existing)
+
+**Description**
+Learner repeats phrase until ASR transcription matches target.
+
+**Inputs**
+
+* target phrase
+* learner audio
+
+**Output**
+
+* ASR transcript
+* confidence score
+
+**Success condition**
+Transcript match ≥ threshold.
+
+---
+
+## Feature 2 — Error Highlighting (HIGH PRIORITY)
+
+### Description
+
+Show difference between learner output and target phrase.
+
+### UX Example
+
+```
+You said:   I sink so
+Target:     I think so
+```
+
+Highlighted diff.
+
+### Requirements
+
+* string comparison algorithm
+* token-level highlighting
+
+### Acceptance Criteria
+
+* mismatch visually clear within 300ms.
+
+---
+
+## Feature 3 — Rule-Based Pronunciation Hints
+
+### Description
+
+Provide minimal phonetic guidance based on common ASR confusions.
+
+### Example
+
+```
+Tip: English "th" uses tongue between teeth.
+```
+
+### Implementation
+
+Lookup table:
+
+```
+sink → think → TH_SOUND_HINT
+lice → rice → R_L_HINT
+```
+
+### Non-goal
+
+No phoneme detection ML.
+
+---
+
+## Feature 4 — Double Success Confirmation
+
+### Description
+
+Require two successful recognitions.
+
+### UX
+
+```
+Recognized ✔
+Say it once more to lock it in.
+```
+
+### Rationale
+
+Motor learning stabilization.
+
+---
+
+## Feature 5 — Variation Challenge
+
+### Description
+
+After success, learner produces phrase in a new sentence.
+
+### Example
+
+Target:
+
+> I think so.
+
+Variation:
+
+> I think so today.
+
+### Generation Options
+
+* template library (MVP)
+* LLM expansion (later phase)
+
+### Acceptance
+
+ASR recognition of variant phrase.
+
+---
+
+## Feature 6 — Spaced Pronunciation Review
+
+### Description
+
+Reintroduce mastered phrases later.
+
+### Scheduling
+
+* +10 minutes
+* next session
+* +24 hours
+
+### Trigger
+
+```
+Quick check — can you still say this?
+```
+
+---
+
+## Feature 7 — Multi-Voice Input
+
+### Description
+
+Phrase replayed using different TTS voices.
+
+### Goal
+
+Prevent single-speaker imitation.
+
+### Requirement
+
+Switchable TTS voice IDs.
+
+---
+
+## Feature 8 — Intelligibility-Oriented Progress UI
+
+Replace:
+
+```
+Accuracy: 82%
+```
+
+With:
+
+```
+Listeners would likely understand you: High
+```
+
+Levels:
+
+* Emerging
+* Understandable
+* Clear
+* Effortless
+
+---
+
+# 8. System Architecture (MVP)
+
+```
+Client App
+   ↓
+Audio Capture
+   ↓
+ASR API
+   ↓
+Transcript Comparator
+   ↓
+Feedback Engine
+   ├─ diff highlighter
+   ├─ hint lookup
+   └─ repetition logic
+   ↓
+Learning Scheduler
+```
+
+No new ML components required.
+
+---
+
+# 9. Data Model (Simplified)
+
+### Phrase Object
+
+```
+phrase_id
+target_text
+difficulty_level
+hint_tags[]
+```
+
+### Attempt Object
+
+```
+user_id
+phrase_id
+timestamp
+transcript
+success_bool
+attempt_count
+```
+
+### Review Queue
+
+```
+phrase_id
+next_review_time
+stability_score
+```
+
+---
+
+# 10. Non-Goals (MVP)
+
+* phoneme scoring
+* accent classification
+* native-likeness evaluation
+* real-time articulatory analysis
+* teacher dashboards
+
+---
+
+# 11. Risks & Mitigations
+
+| Risk              | Mitigation          |
+| ----------------- | ------------------- |
+| Learners game ASR | variation phase     |
+| Over-drilling     | spaced review       |
+| Frustration       | visible progress    |
+| ASR errors        | double success rule |
+
+---
+
+# 12. Success Metrics (Product Analytics)
+
+Track:
+
+* attempts per success
+* improvement across retries
+* delayed recall success
+* transfer success rate
+* daily active practice minutes
+
+---
+
+# 13. Roadmap (Post-MVP)
+
+Phase 2:
+
+* adaptive difficulty
+* phoneme heatmaps
+* conversational prompts
+
+Phase 3:
+
+* peer interaction
+* intelligibility prediction models
+
+---
+
+# Executive Summary (for stakeholders)
+
+> By adding lightweight diagnostic feedback, variability, and spaced reinforcement to an existing ASR repetition loop, the app moves from a drill tool to a research-aligned pronunciation intervention — achieving substantially higher pedagogical effectiveness without additional ML complexity.
+
+---
+
+If you want, I can next produce a **“research justification appendix”** suitable for investors or grant applications (mapping each feature directly to findings from SLA meta-analyses).
