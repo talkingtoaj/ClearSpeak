@@ -3,14 +3,17 @@ import {
   buildHint,
   buildVariation,
   evaluateAttempt,
+  flashElement,
   intelligibilityLevel,
   normalizeText,
+  pickCelebrationMessage,
   wordDiff
 } from './logic.js';
 import { consumeReview, dueReviews, schedulePhrase } from './scheduler.js';
 import { loadAttempts, loadReviewQueue, saveAttempt, saveReviewQueue } from './storage.js';
 
 const ui = {
+  practiceCard: document.getElementById('practiceCard'),
   modeLabel: document.getElementById('modeLabel'),
   targetText: document.getElementById('targetText'),
   spokenText: document.getElementById('spokenText'),
@@ -21,7 +24,6 @@ const ui = {
   streakText: document.getElementById('streakText'),
   playBtn: document.getElementById('playBtn'),
   recordBtn: document.getElementById('recordBtn'),
-  stopBtn: document.getElementById('stopBtn'),
   recordingBadge: document.getElementById('recordingBadge'),
   voiceSelect: document.getElementById('voiceSelect'),
   progressBar: document.getElementById('progressBar'),
@@ -78,9 +80,13 @@ function currentTarget() {
 function setRecordingUI(isRecording) {
   state.recording = isRecording;
   ui.recordBtn.disabled = isRecording;
-  ui.stopBtn.disabled = !isRecording;
   ui.recordingBadge.textContent = isRecording ? 'Recording… speak now' : 'Not recording';
   ui.recordingBadge.className = `recording-badge ${isRecording ? 'live' : 'idle'}`;
+}
+
+function setStatus(text) {
+  ui.statusText.textContent = text;
+  if (text) flashElement(ui.statusText);
 }
 
 function progressColor(percent) {
@@ -106,7 +112,7 @@ function refreshProgress() {
 
 function renderWordFeedback(target, transcript, isSuccess) {
   if (isSuccess) {
-    const message = CELEBRATION_MESSAGES[state.celebrationIndex % CELEBRATION_MESSAGES.length];
+    const message = pickCelebrationMessage(state.celebrationIndex, CELEBRATION_MESSAGES);
     state.celebrationIndex += 1;
     ui.feedbackBox.textContent = `✅ ${message}`;
     ui.legend.classList.add('hidden');
@@ -131,7 +137,7 @@ function setTaskFromQueueOrCourse() {
     state.reviewEntry = due[0];
     state.currentPhrase = PHRASES.find((p) => p.phrase_id === due[0].phrase_id) || PHRASES[0];
     ui.modeLabel.textContent = 'Quick Review Check';
-    ui.statusText.textContent = 'Quick check: can you still say this clearly?';
+    setStatus('Quick check: can you still say this clearly?');
     state.successStreak = 0;
     state.attemptCount = 0;
     return;
@@ -143,11 +149,12 @@ function setTaskFromQueueOrCourse() {
   state.successStreak = 0;
   state.attemptCount = 0;
   ui.modeLabel.textContent = 'Practice Phrase';
-  ui.statusText.textContent = '';
+  setStatus('');
 }
 
 function renderTarget() {
   ui.targetText.textContent = currentTarget();
+  flashElement(ui.practiceCard);
   ui.spokenText.textContent = '(waiting)';
   ui.feedbackBox.textContent = 'Your detailed word feedback appears here after each attempt.';
   ui.legend.classList.add('hidden');
@@ -180,7 +187,7 @@ function startVariationChallenge() {
   state.successStreak = 0;
   state.variationText = buildVariation(state.currentPhrase.target_text, state.phraseIndex);
   ui.modeLabel.textContent = 'Variation Challenge';
-  ui.statusText.textContent = 'Great. Now say this new sentence variation once.';
+  setStatus('Great. Now say this new sentence variation once.');
   renderTarget();
 }
 
@@ -215,19 +222,22 @@ function processTranscript(transcript) {
   if (result.success) {
     state.successStreak += 1;
     if (state.successStreak >= requiredSuccesses()) {
+      const celebrationMsg = `✅ ${pickCelebrationMessage(state.celebrationIndex - 1, CELEBRATION_MESSAGES)}`;
       if (state.mode === 'practice') {
-        ui.statusText.textContent = 'Locked in ✔ Next step: variation challenge.';
+        setStatus('Locked in ✔ Next step: variation challenge.');
         startVariationChallenge();
+        ui.feedbackBox.textContent = celebrationMsg;
       } else {
-        ui.statusText.textContent = 'Success ✔ Moving to next item.';
+        setStatus('Success ✔ Moving to next item.');
         completePhraseCycle();
+        ui.feedbackBox.textContent = celebrationMsg;
       }
     } else {
-      ui.statusText.textContent = 'Recognized ✔ Say it once more to lock it in.';
+      setStatus('Recognized ✔ Say it once more to lock it in.');
     }
   } else {
     state.successStreak = 0;
-    ui.statusText.textContent = `Not yet (${Math.round(result.score * 100)}% match). Try again.`;
+    setStatus(`Not yet (${Math.round(result.score * 100)}% match). Try again.`);
   }
 
   ui.streakText.textContent = `Current lock-in streak: ${state.successStreak}/${requiredSuccesses()}`;
@@ -255,18 +265,12 @@ ui.playBtn.addEventListener('click', () => speak(currentTarget()));
 
 ui.recordBtn.addEventListener('click', () => {
   if (!recognition) {
-    ui.statusText.textContent = 'Speech recognition is not available in this browser.';
+    setStatus('Speech recognition is not available in this browser.');
     return;
   }
   setRecordingUI(true);
-  ui.statusText.textContent = 'Recording... speak clearly, then click Stop.';
+  setStatus('Recording... speak clearly and naturally.');
   recognition.start();
-});
-
-ui.stopBtn.addEventListener('click', () => {
-  if (!recognition || !state.recording) return;
-  recognition.stop();
-  ui.statusText.textContent = 'Processing your attempt...';
 });
 
 if (recognition) {
@@ -281,7 +285,7 @@ if (recognition) {
 
   recognition.onerror = () => {
     setRecordingUI(false);
-    ui.statusText.textContent = 'Could not capture speech. Please try again.';
+    setStatus('Could not capture speech. Please try again.');
   };
 }
 

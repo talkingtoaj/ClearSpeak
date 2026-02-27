@@ -181,3 +181,12 @@ button:disabled {
   background: #d97706;
   transition: width 0.3s ease, background 0.3s ease;
 }
+
+@keyframes flashYellow {
+  0%   { background-color: #ffe600; }
+  100% { background-color: white; }
+}
+
+.flash-yellow {
+  animation: flashYellow 0.8s ease-out;
+}

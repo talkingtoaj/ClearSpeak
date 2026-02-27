@@ -23,14 +23,14 @@
         <h3>Your task</h3>
         <ol>
           <li>Click <strong>Play Phrase</strong> to hear the model phrase.</li>
-          <li>Click <strong>Record</strong> to start. Click <strong>Stop</strong> when finished (it may also stop automatically once speech is captured).</li>
+          <li>Click <strong>Record</strong> to start. Recording stops automatically once speech is captured.</li>
           <li>Read the feedback and try again as needed.</li>
           <li>Track your overall improvement in the progress panel.</li>
         </ol>
         <p class="small-note">Tip: Speak naturally and clearly, not too fast.</p>
       </section>
 
-      <section class="card">
+      <section class="card" id="practiceCard">
         <h2 id="modeLabel">Practice Phrase</h2>
         <p><strong>Target phrase:</strong> <span id="targetText"></span></p>
 
@@ -41,7 +41,6 @@
             <select id="voiceSelect"></select>
           </label>
           <button id="recordBtn">🎙️ Record</button>
-          <button id="stopBtn" class="secondary" disabled>⏹ Stop</button>
           <span id="recordingBadge" class="recording-badge idle">Not recording</span>
         </div>
 

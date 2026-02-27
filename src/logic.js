@@ -113,3 +113,14 @@ export function intelligibilityLevel(successRate) {
   if (successRate >= 0.5) return 'Understandable';
   return 'Emerging';
 }
+
+export function pickCelebrationMessage(index, messages) {
+  return messages[index % messages.length];
+}
+
+export function flashElement(el) {
+  el.classList.remove('flash-yellow');
+  // Force reflow so removing then adding class triggers animation
+  void el.offsetWidth;
+  el.classList.add('flash-yellow');
+}
