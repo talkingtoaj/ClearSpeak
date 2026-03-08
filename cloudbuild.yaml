@@ -1,0 +1,60 @@
+# Cloud Build: deploy ClearSpeak to Cloud Run on push
+# Uses deploy skill patterns: build cache, BuildKit, dual tagging, E2_HIGHCPU_8
+
+steps:
+  - id: "build"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--cache-from"
+      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+      - "-t"
+      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
+      - "-t"
+      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+      - "."
+    env:
+      - "DOCKER_BUILDKIT=1"
+
+  - id: "push"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
+
+  - id: "push-latest"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+
+  - id: "deploy"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE_NAME}"
+      - "--image=gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
+      - "--platform=managed"
+      - "--region=${_REGION}"
+      - "--allow-unauthenticated"
+      - "--memory=256Mi"
+      - "--cpu=1"
+      - "--max-instances=1"
+      - "--min-instances=0"
+      - "--timeout=60"
+
+images:
+  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
+  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+
+options:
+  machineType: "E2_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 900s
+
+substitutions:
+  _SERVICE_NAME: "clearspeak"
+  _REGION: "us-central1"

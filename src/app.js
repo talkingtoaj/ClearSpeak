@@ -21,6 +21,7 @@ const ui = {
   legend: document.getElementById('legend'),
   hintText: document.getElementById('hintText'),
   statusText: document.getElementById('statusText'),
+  nextStepEl: document.getElementById('nextStepEl'),
   streakText: document.getElementById('streakText'),
   playBtn: document.getElementById('playBtn'),
   recordBtn: document.getElementById('recordBtn'),
@@ -30,7 +31,10 @@ const ui = {
   progressSummary: document.getElementById('progressSummary'),
   intelligibilityText: document.getElementById('intelligibilityText'),
   totalAttempts: document.getElementById('totalAttempts'),
-  reviewsDue: document.getElementById('reviewsDue')
+  reviewsDue: document.getElementById('reviewsDue'),
+  introWrap: document.getElementById('introWrap'),
+  introToggle: document.getElementById('introToggle'),
+  introContent: document.getElementById('introContent')
 };
 
 const CELEBRATION_MESSAGES = [
@@ -84,16 +88,26 @@ function setRecordingUI(isRecording) {
   ui.recordingBadge.className = `recording-badge ${isRecording ? 'live' : 'idle'}`;
 }
 
+function setPracticeCardSuccess(on) {
+  if (on) ui.practiceCard.classList.add('success');
+  else ui.practiceCard.classList.remove('success');
+}
+
+function setNextStep(text) {
+  ui.nextStepEl.textContent = text || '';
+  ui.nextStepEl.style.display = text ? 'block' : 'none';
+}
+
 function setStatus(text) {
   ui.statusText.textContent = text;
   if (text) flashElement(ui.statusText);
 }
 
 function progressColor(percent) {
-  if (percent >= 85) return '#0f9d58';
-  if (percent >= 65) return '#2a64f6';
-  if (percent >= 45) return '#d97706';
-  return '#c2410c';
+  if (percent >= 85) return '#2d9d78';
+  if (percent >= 65) return '#0d7377';
+  if (percent >= 45) return '#c9a227';
+  return '#0a5c5f';
 }
 
 function refreshProgress() {
@@ -153,6 +167,8 @@ function setTaskFromQueueOrCourse() {
 }
 
 function renderTarget() {
+  setPracticeCardSuccess(false);
+  setNextStep('');
   ui.targetText.textContent = currentTarget();
   flashElement(ui.practiceCard);
   ui.spokenText.textContent = '(waiting)';
@@ -189,6 +205,7 @@ function startVariationChallenge() {
   ui.modeLabel.textContent = 'Variation Challenge';
   setStatus('Great. Now say this new sentence variation once.');
   renderTarget();
+  setNextStep('Say this variation once to complete the phrase.');
 }
 
 function logAttempt(transcript, success) {
@@ -221,22 +238,28 @@ function processTranscript(transcript) {
 
   if (result.success) {
     state.successStreak += 1;
+    setPracticeCardSuccess(true);
     if (state.successStreak >= requiredSuccesses()) {
       const celebrationMsg = `✅ ${pickCelebrationMessage(state.celebrationIndex - 1, CELEBRATION_MESSAGES)}`;
       if (state.mode === 'practice') {
-        setStatus('Locked in ✔ Next step: variation challenge.');
+        setStatus('Locked in ✔');
+        setNextStep('Next: say the variation below once to complete this phrase.');
         startVariationChallenge();
         ui.feedbackBox.textContent = celebrationMsg;
       } else {
-        setStatus('Success ✔ Moving to next item.');
+        setStatus('Success ✔');
+        setNextStep('Moving to next item.');
         completePhraseCycle();
         ui.feedbackBox.textContent = celebrationMsg;
       }
     } else {
-      setStatus('Recognized ✔ Say it once more to lock it in.');
+      setStatus('Recognized ✔');
+      setNextStep('Say it once more to lock it in.');
     }
   } else {
     state.successStreak = 0;
+    setPracticeCardSuccess(false);
+    setNextStep('');
     setStatus(`Not yet (${Math.round(result.score * 100)}% match). Try again.`);
   }
 
@@ -256,7 +279,8 @@ function speak(text) {
 
 function populateVoices() {
   const voices = speechSynthesis.getVoices();
-  ui.voiceSelect.innerHTML = voices
+  const englishVoices = voices.filter((v) => v.lang.startsWith('en-'));
+  ui.voiceSelect.innerHTML = (englishVoices.length ? englishVoices : voices)
     .map((v) => `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`)
     .join('');
 }
@@ -292,6 +316,15 @@ if (recognition) {
 if (window.speechSynthesis) {
   populateVoices();
   speechSynthesis.onvoiceschanged = populateVoices;
+}
+
+if (ui.introToggle && ui.introWrap && ui.introContent) {
+  ui.introToggle.addEventListener('click', () => {
+    const isOpen = ui.introWrap.classList.toggle('is-open');
+    ui.introToggle.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) ui.introContent.removeAttribute('hidden');
+    else ui.introContent.setAttribute('hidden', '');
+  });
 }
 
 setTaskFromQueueOrCourse();

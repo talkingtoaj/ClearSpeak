@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClearSpeak MVP</title>
+    <title>ClearSpeak — Pronunciation practice</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -13,58 +13,68 @@
         <p class="sub">Build clearer, more understandable English pronunciation step by step.</p>
       </header>
 
-      <section class="card intro">
-        <h2>How this practice helps</h2>
-        <p>
-          This activity helps you train speech clarity. You hear a phrase, say it aloud, and get immediate feedback.
-          Repeating successful attempts helps lock in mouth movement patterns, and later review checks help you retain
-          what you learned.
-        </p>
-        <h3>Your task</h3>
-        <ol>
-          <li>Click <strong>Play Phrase</strong> to hear the model phrase.</li>
-          <li>Click <strong>Record</strong> to start. Recording stops automatically once speech is captured.</li>
-          <li>Read the feedback and try again as needed.</li>
-          <li>Track your overall improvement in the progress panel.</li>
-        </ol>
-        <p class="small-note">Tip: Speak naturally and clearly, not too fast.</p>
+      <section class="intro-wrap" id="introWrap">
+        <button type="button" class="intro-toggle" id="introToggle" aria-expanded="false" aria-controls="introContent">How it works</button>
+        <div class="intro card intro-content" id="introContent" hidden>
+          <h2>How this practice helps</h2>
+          <p>
+            You hear a phrase, say it aloud, and get immediate feedback. Repeating successful attempts locks in mouth movement patterns; later review checks help you retain what you learned.
+          </p>
+          <h3>Your task</h3>
+          <ol>
+            <li>Click <strong>Play Phrase</strong> to hear the model.</li>
+            <li>Click <strong>Record</strong> and speak. Recording stops automatically.</li>
+            <li>Read the feedback and try again as needed.</li>
+            <li>Track your progress in the strip below.</li>
+          </ol>
+          <p class="small-note">Tip: Speak naturally and clearly, not too fast.</p>
+        </div>
       </section>
 
       <section class="card" id="practiceCard">
         <h2 id="modeLabel">Practice Phrase</h2>
-        <p><strong>Target phrase:</strong> <span id="targetText"></span></p>
-
-        <div class="controls">
-          <button id="playBtn">🔊 Play Phrase</button>
-          <label>
-            Voice:
-            <select id="voiceSelect"></select>
-          </label>
-          <button id="recordBtn">🎙️ Record</button>
-          <span id="recordingBadge" class="recording-badge idle">Not recording</span>
+        <div class="practice-target-wrap">
+          <span class="target-label">Target phrase</span>
+          <span id="targetText"></span>
         </div>
 
-        <p><strong>You said:</strong> <span id="spokenText">(waiting)</span></p>
-        <div id="feedbackBox" class="feedback-box"></div>
+        <div class="controls">
+          <button id="playBtn" type="button" aria-label="Play phrase">🔊 Play Phrase</button>
+          <label>
+            Voice:
+            <select id="voiceSelect" aria-label="TTS voice"></select>
+          </label>
+          <button id="recordBtn" type="button" aria-label="Start recording">🎙️ Record</button>
+          <span id="recordingBadge" class="recording-badge idle" aria-live="polite">Not recording</span>
+        </div>
+
+        <div class="you-said-wrap">
+          <p><strong>You said:</strong> <span id="spokenText">(waiting)</span></p>
+        </div>
+        <div id="feedbackBox" class="feedback-box" role="status" aria-live="polite">Your detailed word feedback appears here after each attempt.</div>
         <div id="legend" class="legend hidden">
-          <p><span class="dot good"></span> Green = matched words</p>
-          <p><span class="dot miss"></span> Red [word] = expected word was missing</p>
-          <p><span class="dot extra"></span> Purple (word) = extra word was detected</p>
+          <p><span class="dot good" aria-hidden="true"></span> Green = matched words</p>
+          <p><span class="dot miss" aria-hidden="true"></span> Red [word] = expected word was missing</p>
+          <p><span class="dot extra" aria-hidden="true"></span> Purple (word) = extra word was detected</p>
         </div>
         <p class="hint" id="hintText">Tip appears after your first try.</p>
         <p id="statusText"></p>
+        <p class="next-step" id="nextStepEl"></p>
         <p id="streakText"></p>
       </section>
 
-      <section class="card">
-        <h2>Your Progress</h2>
-        <div class="progress-wrap">
-          <div id="progressBar" class="progress-bar"></div>
+      <section class="progress-strip card">
+        <div class="progress-visual">
+          <div class="progress-wrap">
+            <div id="progressBar" class="progress-bar"></div>
+          </div>
+          <span id="progressSummary">Current clarity score: 0%</span>
         </div>
-        <p id="progressSummary">Current clarity score: 0%</p>
-        <p id="intelligibilityText">Level: Emerging — early stage, keep practicing to improve consistency.</p>
-        <p>Total attempts: <span id="totalAttempts">0</span></p>
-        <p>Review check-ins available now: <span id="reviewsDue">0</span></p>
+        <div class="stats">
+          <p id="intelligibilityText">Level: Emerging — early stage, keep practicing to improve consistency.</p>
+          <p>Total attempts: <span id="totalAttempts">0</span></p>
+          <p>Reviews due now: <span id="reviewsDue">0</span></p>
+        </div>
       </section>
     </main>
 
