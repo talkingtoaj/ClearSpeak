@@ -1,0 +1,11 @@
+[project]
+name = "clearspeak-icons"
+version = "0.1.0"
+description = "Icon generation for ClearSpeak"
+dependencies = [
+    "google-genai>=1.0.0",
+    "Pillow>=10.0.0",
+]
+
+[tool.uv]
+dev-dependencies = []

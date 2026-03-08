@@ -60,6 +60,16 @@ body {
   animation: bounceIn 0.6s var(--ease-bounce);
 }
 
+.hero-icon {
+  display: block;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+
 .hero.card h1 {
   font-family: var(--font-display);
   font-weight: 700;
