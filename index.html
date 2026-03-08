@@ -78,7 +78,24 @@
           <p>Total attempts: <span id="totalAttempts">0</span></p>
           <p>Reviews due now: <span id="reviewsDue">0</span></p>
         </div>
+        <div class="progress-by-topic" id="progressByTopicSection">
+          <h3 class="progress-by-topic-title">Progress by topic</h3>
+          <ul class="topic-list" id="topicList" aria-label="Confusion topics and your progress"></ul>
+        </div>
       </section>
+
+      <dialog id="topicDialog" class="topic-dialog" aria-labelledby="topicDialogTitle" aria-modal="true">
+        <div class="topic-dialog-inner">
+          <h2 id="topicDialogTitle" class="topic-dialog-title"></h2>
+          <div class="topic-dialog-instructions" id="topicDialogInstructions"></div>
+          <p class="topic-dialog-examples-label">Examples:</p>
+          <p class="topic-dialog-examples" id="topicDialogExamples"></p>
+          <div class="topic-dialog-video-wrap">
+            <iframe class="topic-dialog-video" title="Pronunciation video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <button type="button" class="topic-dialog-close" id="topicDialogClose" aria-label="Close">Close</button>
+        </div>
+      </dialog>
     </main>
 
     <script type="module" src="src/app.js"></script>

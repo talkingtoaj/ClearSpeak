@@ -525,6 +525,154 @@ button:disabled {
   color: var(--color-text-muted);
 }
 
+/* ----- Progress by topic ----- */
+.progress-by-topic {
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.progress-by-topic-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--color-text);
+}
+
+.topic-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topic-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+
+.topic-label {
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 140px;
+}
+
+.topic-progress {
+  color: var(--color-text-muted);
+  flex: 1;
+}
+
+.topic-info-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  background: var(--color-info);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.topic-info-btn:hover {
+  background: #2563a8;
+  transform: scale(1.1);
+}
+
+/* ----- Topic help dialog ----- */
+.topic-dialog {
+  max-width: min(560px, 96vw);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  background: var(--color-card);
+}
+
+.topic-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.topic-dialog-inner {
+  padding: 20px 24px 24px;
+}
+
+.topic-dialog-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+.topic-dialog-instructions {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  margin-bottom: 12px;
+}
+
+.topic-dialog-examples-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin: 0 0 4px;
+}
+
+.topic-dialog-examples {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin: 0 0 16px;
+}
+
+.topic-dialog-video-wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 */
+  margin-bottom: 16px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.topic-dialog-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.topic-dialog-close {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 1rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.topic-dialog-close:hover {
+  background: var(--color-primary-dark);
+}
+
 /* ----- Flash (for status / card) ----- */
 @keyframes flashYellow {
   0% { background-color: var(--color-secondary); }

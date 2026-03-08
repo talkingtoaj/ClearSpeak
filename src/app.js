@@ -9,8 +9,10 @@ import {
   pickCelebrationMessage,
   wordDiff
 } from './logic.js';
+import { computeProgressByTopic } from './progressByTopic.js';
 import { consumeReview, dueReviews, schedulePhrase } from './scheduler.js';
 import { loadAttempts, loadReviewQueue, saveAttempt, saveReviewQueue } from './storage.js';
+import { getTopicHelp, TOPIC_HELP_ORDER } from './topicHelp.js';
 
 const ui = {
   practiceCard: document.getElementById('practiceCard'),
@@ -34,7 +36,14 @@ const ui = {
   reviewsDue: document.getElementById('reviewsDue'),
   introWrap: document.getElementById('introWrap'),
   introToggle: document.getElementById('introToggle'),
-  introContent: document.getElementById('introContent')
+  introContent: document.getElementById('introContent'),
+  topicList: document.getElementById('topicList'),
+  topicDialog: document.getElementById('topicDialog'),
+  topicDialogTitle: document.getElementById('topicDialogTitle'),
+  topicDialogInstructions: document.getElementById('topicDialogInstructions'),
+  topicDialogExamples: document.getElementById('topicDialogExamples'),
+  topicDialogVideo: document.querySelector('.topic-dialog-video'),
+  topicDialogClose: document.getElementById('topicDialogClose')
 };
 
 const CELEBRATION_MESSAGES = [
@@ -110,6 +119,68 @@ function progressColor(percent) {
   return '#0a5c5f';
 }
 
+/** Topic ids that appear in at least one phrase's hint_tags, in TOPIC_HELP_ORDER order */
+function topicIdsInUse() {
+  const set = new Set(PHRASES.flatMap((p) => p.hint_tags || []));
+  return TOPIC_HELP_ORDER.filter((id) => set.has(id));
+}
+
+function refreshProgressByTopic() {
+  if (!ui.topicList) return;
+  const ids = topicIdsInUse();
+  const progress = computeProgressByTopic(state.attempts, PHRASES, ids);
+
+  ui.topicList.innerHTML = '';
+  progress.forEach((row) => {
+    const topic = getTopicHelp(row.topicId);
+    if (!topic) return;
+
+    const li = document.createElement('li');
+    li.className = 'topic-row';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'topic-label';
+    labelSpan.textContent = topic.label;
+
+    const progressSpan = document.createElement('span');
+    progressSpan.className = 'topic-progress';
+    progressSpan.textContent =
+      row.totalAttempts === 0
+        ? 'No practice yet'
+        : `${Math.round(row.successRate * 100)}% (${row.successfulAttempts}/${row.totalAttempts})`;
+
+    const infoBtn = document.createElement('button');
+    infoBtn.type = 'button';
+    infoBtn.className = 'topic-info-btn';
+    infoBtn.setAttribute('aria-label', `Help for ${topic.label}`);
+    infoBtn.textContent = 'ⓘ';
+    infoBtn.dataset.topicId = row.topicId;
+    infoBtn.addEventListener('click', () => openTopicDialog(row.topicId, infoBtn));
+
+    li.append(labelSpan, progressSpan, infoBtn);
+    ui.topicList.appendChild(li);
+  });
+}
+
+function openTopicDialog(topicId, triggerButton) {
+  const topic = getTopicHelp(topicId);
+  if (!topic || !ui.topicDialog) return;
+
+  state.topicDialogTrigger = triggerButton;
+  ui.topicDialogTitle.textContent = topic.label;
+  ui.topicDialogInstructions.textContent = topic.instructions;
+  ui.topicDialogExamples.textContent = topic.examples.join(' · ');
+  if (ui.topicDialogVideo) {
+    ui.topicDialogVideo.src = `https://www.youtube.com/embed/${topic.youtubeVideoId}`;
+  }
+  ui.topicDialog.showModal();
+}
+
+function closeTopicDialog() {
+  if (!ui.topicDialog) return;
+  ui.topicDialog.close();
+}
+
 function refreshProgress() {
   const successes = state.attempts.filter((a) => a.success_bool).length;
   const successRate = state.attempts.length ? successes / state.attempts.length : 0;
@@ -122,6 +193,7 @@ function refreshProgress() {
   ui.progressBar.style.background = progressColor(percent);
   ui.progressSummary.textContent = `Current clarity score: ${percent}%`;
   ui.intelligibilityText.textContent = `Level: ${LEVEL_EXPLANATIONS[level]}`;
+  refreshProgressByTopic();
 }
 
 function renderWordFeedback(target, transcript, isSuccess) {
@@ -280,7 +352,13 @@ function speak(text) {
 function populateVoices() {
   const voices = speechSynthesis.getVoices();
   const englishVoices = voices.filter((v) => v.lang.startsWith('en-'));
-  ui.voiceSelect.innerHTML = (englishVoices.length ? englishVoices : voices)
+  const list = englishVoices.length ? englishVoices : voices;
+  const sorted = [...list].sort((a, b) => {
+    const aGoogle = a.name.toLowerCase().includes('google') ? 0 : 1;
+    const bGoogle = b.name.toLowerCase().includes('google') ? 0 : 1;
+    return aGoogle - bGoogle;
+  });
+  ui.voiceSelect.innerHTML = sorted
     .map((v) => `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`)
     .join('');
 }
@@ -325,6 +403,22 @@ if (ui.introToggle && ui.introWrap && ui.introContent) {
     if (isOpen) ui.introContent.removeAttribute('hidden');
     else ui.introContent.setAttribute('hidden', '');
   });
+}
+
+if (ui.topicDialog) {
+  ui.topicDialog.addEventListener('close', () => {
+    if (ui.topicDialogVideo) ui.topicDialogVideo.removeAttribute('src');
+    if (state.topicDialogTrigger && typeof state.topicDialogTrigger.focus === 'function') {
+      state.topicDialogTrigger.focus();
+    }
+    state.topicDialogTrigger = null;
+  });
+  ui.topicDialog.addEventListener('click', (e) => {
+    if (e.target === ui.topicDialog) closeTopicDialog();
+  });
+}
+if (ui.topicDialogClose) {
+  ui.topicDialogClose.addEventListener('click', closeTopicDialog);
 }
 
 setTaskFromQueueOrCourse();
