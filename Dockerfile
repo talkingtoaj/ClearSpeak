@@ -9,6 +9,7 @@ WORKDIR /app
 COPY package.json ./
 COPY scripts/ ./scripts/
 COPY src/ ./src/
+COPY icons/ ./icons/
 COPY index.html ./
 COPY styles.css ./
 
