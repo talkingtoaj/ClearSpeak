@@ -48,6 +48,17 @@ body {
   padding: 20px 16px 40px;
 }
 
+.browser-warning {
+  background: #fff3cd;
+  border: 2px solid #c9a227;
+  border-radius: var(--radius-card);
+  color: #5c4a00;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  text-align: center;
+}
+
 /* ----- Hero (readable header: dark bg, white text) ----- */
 .hero.card {
   background: var(--color-header-bg) !important;

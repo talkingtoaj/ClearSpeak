@@ -13,6 +13,9 @@ import { computeProgressByTopic } from './progressByTopic.js';
 import { consumeReview, dueReviews, schedulePhrase } from './scheduler.js';
 import { loadAttempts, loadReviewQueue, saveAttempt, saveReviewQueue } from './storage.js';
 import { getTopicHelp, TOPIC_HELP_ORDER } from './topicHelp.js';
+import {
+  shouldShowBrowserCompatibilityWarning
+} from './browserSupport.js';
 
 const ui = {
   practiceCard: document.getElementById('practiceCard'),
@@ -43,8 +46,21 @@ const ui = {
   topicDialogInstructions: document.getElementById('topicDialogInstructions'),
   topicDialogExamples: document.getElementById('topicDialogExamples'),
   topicDialogVideo: document.querySelector('.topic-dialog-video'),
-  topicDialogClose: document.getElementById('topicDialogClose')
+  topicDialogClose: document.getElementById('topicDialogClose'),
+  browserWarningBanner: document.getElementById('browserWarningBanner')
 };
+
+function initBrowserCompatibilityWarning() {
+  if (!ui.browserWarningBanner) return;
+  const show = shouldShowBrowserCompatibilityWarning({
+    userAgent: navigator.userAgent,
+    mobileHint: navigator.userAgentData?.mobile,
+    maxTouchPoints: navigator.maxTouchPoints ?? 0
+  });
+  if (!show) return;
+  ui.browserWarningBanner.hidden = false;
+  ui.browserWarningBanner.classList.remove('hidden');
+}
 
 const CELEBRATION_MESSAGES = [
   'Great job! That was clearly recognized.',
@@ -425,3 +441,4 @@ setTaskFromQueueOrCourse();
 renderTarget();
 refreshProgress();
 setRecordingUI(false);
+initBrowserCompatibilityWarning();
