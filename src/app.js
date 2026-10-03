@@ -7,11 +7,20 @@ import {
   intelligibilityLevel,
   normalizeText,
   pickCelebrationMessage,
+  recentSuccessRate,
+  RECENT_ATTEMPT_WINDOW,
   wordDiff
 } from './logic.js';
 import { computeProgressByTopic } from './progressByTopic.js';
-import { consumeReview, dueReviews, schedulePhrase } from './scheduler.js';
-import { loadAttempts, loadReviewQueue, saveAttempt, saveReviewQueue } from './storage.js';
+import { dueReviews, schedulePhrase } from './scheduler.js';
+import {
+  loadAttempts,
+  loadCourseIndex,
+  loadReviewQueue,
+  saveAttempt,
+  saveCourseIndex,
+  saveReviewQueue
+} from './storage.js';
 import { getTopicHelp, TOPIC_HELP_ORDER } from './topicHelp.js';
 import {
   shouldShowBrowserCompatibilityWarning
@@ -85,7 +94,7 @@ if (recognition) {
 }
 
 const state = {
-  phraseIndex: 0,
+  phraseIndex: loadCourseIndex(),
   mode: 'practice',
   currentPhrase: PHRASES[0],
   variationText: '',
@@ -93,7 +102,7 @@ const state = {
   attemptCount: 0,
   attempts: loadAttempts(),
   reviewQueue: loadReviewQueue(),
-  reviewEntry: null,
+  reviewLapsed: false,
   recording: false,
   celebrationIndex: 0
 };
@@ -198,8 +207,7 @@ function closeTopicDialog() {
 }
 
 function refreshProgress() {
-  const successes = state.attempts.filter((a) => a.success_bool).length;
-  const successRate = state.attempts.length ? successes / state.attempts.length : 0;
+  const successRate = recentSuccessRate(state.attempts);
   const percent = Math.round(successRate * 100);
   const level = intelligibilityLevel(successRate);
 
@@ -207,7 +215,7 @@ function refreshProgress() {
   ui.reviewsDue.textContent = String(dueReviews(state.reviewQueue).length);
   ui.progressBar.style.width = `${percent}%`;
   ui.progressBar.style.background = progressColor(percent);
-  ui.progressSummary.textContent = `Current clarity score: ${percent}%`;
+  ui.progressSummary.textContent = `Clarity score (last ${RECENT_ATTEMPT_WINDOW} attempts): ${percent}%`;
   ui.intelligibilityText.textContent = `Level: ${LEVEL_EXPLANATIONS[level]}`;
   refreshProgressByTopic();
 }
@@ -233,10 +241,10 @@ function renderWordFeedback(target, transcript, isSuccess) {
 }
 
 function setTaskFromQueueOrCourse() {
+  state.reviewLapsed = false;
   const due = dueReviews(state.reviewQueue);
   if (due.length > 0) {
     state.mode = 'review';
-    state.reviewEntry = due[0];
     state.currentPhrase = PHRASES.find((p) => p.phrase_id === due[0].phrase_id) || PHRASES[0];
     ui.modeLabel.textContent = 'Quick Review Check';
     setStatus('Quick check: can you still say this clearly?');
@@ -246,7 +254,6 @@ function setTaskFromQueueOrCourse() {
   }
 
   state.mode = 'practice';
-  state.reviewEntry = null;
   state.currentPhrase = PHRASES[state.phraseIndex % PHRASES.length];
   state.successStreak = 0;
   state.attemptCount = 0;
@@ -270,6 +277,7 @@ function completePhraseCycle() {
     state.reviewQueue = schedulePhrase(state.reviewQueue, state.currentPhrase.phrase_id);
     saveReviewQueue(state.reviewQueue);
     state.phraseIndex += 1;
+    saveCourseIndex(state.phraseIndex);
     setTaskFromQueueOrCourse();
     renderTarget();
     refreshProgress();
@@ -277,8 +285,9 @@ function completePhraseCycle() {
   }
 
   if (state.mode === 'review') {
-    state.reviewQueue = consumeReview(state.reviewQueue, state.reviewEntry);
-    state.reviewQueue = schedulePhrase(state.reviewQueue, state.currentPhrase.phrase_id);
+    state.reviewQueue = schedulePhrase(state.reviewQueue, state.currentPhrase.phrase_id, Date.now(), {
+      lapsed: state.reviewLapsed
+    });
     saveReviewQueue(state.reviewQueue);
     setTaskFromQueueOrCourse();
     renderTarget();
@@ -305,7 +314,7 @@ function logAttempt(transcript, success) {
     success_bool: success,
     attempt_count: state.attemptCount
   };
-  state.attempts = saveAttempt(attempt);
+  state.attempts = saveAttempt(state.attempts, attempt);
   refreshProgress();
 }
 
@@ -345,6 +354,7 @@ function processTranscript(transcript) {
       setNextStep('Say it once more to lock it in.');
     }
   } else {
+    if (state.mode === 'review') state.reviewLapsed = true;
     state.successStreak = 0;
     setPracticeCardSuccess(false);
     setNextStep('');

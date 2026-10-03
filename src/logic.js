@@ -85,13 +85,33 @@ export function wordDiff(target, transcript) {
   return result;
 }
 
-export function buildHint(target, transcript, hintTags = []) {
-  const targetWords = normalizeText(target).split(' ').filter(Boolean);
-  const spokenWords = normalizeText(transcript).split(' ').filter(Boolean);
-  const len = Math.min(targetWords.length, spokenWords.length);
+/**
+ * Pairs each spoken word with the target word it most likely replaced.
+ * Uses the wordDiff alignment, so an extra or dropped word elsewhere
+ * does not throw the pairing off. Each gap between matched words can hold
+ * several swaps, so every missing/extra combo in that gap is a candidate.
+ */
+export function substitutionPairs(target, transcript) {
+  const pairs = [];
+  let missing = [];
+  let extra = [];
+  const flush = () => {
+    for (const t of missing) for (const s of extra) pairs.push({ spoken: s, target: t });
+    missing = [];
+    extra = [];
+  };
+  for (const part of wordDiff(target, transcript)) {
+    if (part.type === 'missing') missing.push(part.target);
+    else if (part.type === 'extra') extra.push(part.spoken);
+    else flush();
+  }
+  flush();
+  return pairs;
+}
 
-  for (let i = 0; i < len; i += 1) {
-    const key = `${spokenWords[i]}->${targetWords[i]}`;
+export function buildHint(target, transcript, hintTags = []) {
+  for (const { spoken, target: word } of substitutionPairs(target, transcript)) {
+    const key = `${spoken}->${word}`;
     if (CONFUSION_HINTS[key]) return CONFUSION_HINTS[key];
   }
 
@@ -104,7 +124,22 @@ export function buildHint(target, transcript, hintTags = []) {
 
 export function buildVariation(phrase, attemptIndex = 0) {
   const template = VARIATION_TEMPLATES[attemptIndex % VARIATION_TEMPLATES.length];
-  return template.replace('{phrase}', normalizeText(phrase));
+  const text = phrase.trim().replace(/[.!?]+$/, '');
+  // Mid-sentence, lower the first letter (but keep "I" and names like "I think so").
+  const inner = template.startsWith('{phrase}') || /^I\b/.test(text)
+    ? text
+    : text.charAt(0).toLowerCase() + text.slice(1);
+  return template.replace('{phrase}', inner);
+}
+
+/** How many recent attempts the clarity score looks at */
+export const RECENT_ATTEMPT_WINDOW = 50;
+
+/** Success rate over the last few attempts, so early struggles fade out over time */
+export function recentSuccessRate(attempts, windowSize = RECENT_ATTEMPT_WINDOW) {
+  const recent = attempts.slice(-windowSize);
+  if (recent.length === 0) return 0;
+  return recent.filter((a) => a.success_bool).length / recent.length;
 }
 
 export function intelligibilityLevel(successRate) {

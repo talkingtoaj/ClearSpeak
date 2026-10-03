@@ -1,11 +1,10 @@
 # ClearSpeak MVP (PRD Implementation)
 
-Implementation in this folder follows `PRD.txt` with a lightweight static web app.
+Lightweight static web app. Specs live in `docs/` (`prd-mvp.txt` for the core app, `prd-progress-by-topic.md` for the topic progress feature).
 
 ## Run
 
 ```bash
-cd ~/tmp/pronunce-asr
 npm test
 npm start
 # open http://localhost:3000
@@ -15,7 +14,7 @@ npm start
 
 1. **ASR Pronunciation Loop**
    - Uses browser `SpeechRecognition` where available.
-   - Record/Stop controls and a live recording indicator make capture state explicit.
+   - Record button and a live recording indicator make capture state explicit. Recording stops on its own when you stop talking.
 
 2. **Error Highlighting**
    - Word-level diff (`src/logic.js -> wordDiff`) displayed with color coding.
@@ -30,14 +29,14 @@ npm start
    - After lock-in, a variant sentence is generated from templates.
 
 6. **Spaced Pronunciation Review**
-   - Successful phrase schedules reviews at +10m, +8h (next session proxy), +24h.
-   - Queue is stored in localStorage and shown as due count.
+   - One review entry per phrase. Each passed review pushes the next one further out (10m, 1d, 3d, 7d, 21d, 60d); a failed review starts it over at 10m.
+   - Queue and course position are stored in localStorage; due count is shown in the progress strip.
 
 7. **Multi-Voice Input**
    - TTS playback with browser voice selector (`speechSynthesis`).
 
 8. **Intelligibility Progress UI**
-   - Displays: Emerging / Understandable / Clear / Effortless.
+   - Displays: Emerging / Understandable / Clear / Effortless, based on the last 50 attempts.
 
 ## File map
 

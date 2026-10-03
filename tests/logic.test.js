@@ -7,6 +7,8 @@ import {
   flashElement,
   intelligibilityLevel,
   pickCelebrationMessage,
+  recentSuccessRate,
+  substitutionPairs,
   wordDiff
 } from '../src/logic.js';
 
@@ -29,7 +31,7 @@ test('buildHint returns confusion-table hint first', () => {
 
 test('buildVariation injects phrase into template', () => {
   const variation = buildVariation('I think so', 1);
-  assert.match(variation, /i think so/);
+  assert.match(variation, /I think so/);
 });
 
 test('intelligibility levels map properly', () => {
@@ -62,4 +64,37 @@ test('flashElement does not throw on element with classList', () => {
   };
   assert.doesNotThrow(() => flashElement(mockEl));
   assert.ok(classes.has('flash-yellow'));
+});
+
+test('buildHint finds the confusion even when an extra word shifts positions', () => {
+  const hint = buildHint('I think so', 'well I sink so', []);
+  assert.match(hint, /tongue/i);
+});
+
+test('buildHint finds the confusion when a word is dropped earlier', () => {
+  const hint = buildHint('I really like rice', 'I like lice', []);
+  assert.match(hint, /round your lips/i);
+});
+
+test('substitutionPairs pairs swapped words between matching anchors', () => {
+  assert.deepEqual(substitutionPairs('I think so', 'I sink so'), [{ spoken: 'sink', target: 'think' }]);
+});
+
+test('buildVariation keeps "I" capitalized mid-sentence', () => {
+  assert.equal(buildVariation('I think so', 1), 'Honestly, I think so');
+});
+
+test('buildVariation lowercases other phrases mid-sentence', () => {
+  assert.equal(buildVariation('Thank you', 1), 'Honestly, thank you');
+});
+
+test('buildVariation keeps casing when the phrase starts the sentence', () => {
+  assert.equal(buildVariation('Thank you', 0), 'Thank you today');
+});
+
+test('recentSuccessRate only counts the most recent window', () => {
+  const old = Array.from({ length: 10 }, () => ({ success_bool: false }));
+  const recent = Array.from({ length: 4 }, () => ({ success_bool: true }));
+  assert.equal(recentSuccessRate([...old, ...recent], 4), 1);
+  assert.equal(recentSuccessRate([], 4), 0);
 });

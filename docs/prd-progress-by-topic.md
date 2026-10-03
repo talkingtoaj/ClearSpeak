@@ -167,4 +167,4 @@ Videos were selected for clarity, correct articulation explanation, minimal pair
 ## 8. References
 
 - Existing app: `src/data.js` (`PHRASES`, `HINT_TAGS`, `CONFUSION_HINTS`), `src/app.js` (progress strip, attempts), `src/storage.js` (attempts), `src/logic.js` (evaluation).
-- PRD (high-level): `PRD.txt` — Feature 8 (Intelligibility-Oriented Progress UI); this PRD extends progress with per-topic breakdown and help.
+- PRD (high-level): `prd-mvp.txt` — Feature 8 (Intelligibility-Oriented Progress UI); this PRD extends progress with per-topic breakdown and help.

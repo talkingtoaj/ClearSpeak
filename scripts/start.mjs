@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import { readFile } from 'fs/promises';
-import { extname, join, normalize } from 'path';
+import { extname, join, normalize, sep } from 'path';
 
 const port = process.env.PORT || 3000;
 const root = process.cwd();
@@ -17,11 +17,11 @@ const mimeTypes = {
 
 createServer(async (req, res) => {
   try {
-    const urlPath = req.url === '/' ? '/index.html' : req.url;
-    const safePath = normalize(urlPath)
-      .replace(/^\/+/, '')
-      .replace(/^\.\.(\/|\\|$)+/, '');
-    const filePath = join(root, safePath);
+    // Drop any ?query or #hash; decoding fails on bad % escapes, which lands in the 404 path.
+    const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    const urlPath = pathname === '/' ? '/index.html' : pathname;
+    const filePath = join(root, normalize(urlPath));
+    if (!filePath.startsWith(root + sep)) throw new Error('Path escapes root');
     const content = await readFile(filePath);
     res.writeHead(200, { 'Content-Type': mimeTypes[extname(filePath)] || 'text/plain; charset=utf-8' });
     res.end(content);
