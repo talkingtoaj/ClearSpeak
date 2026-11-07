@@ -19,6 +19,11 @@ createServer(async (req, res) => {
   try {
     // Drop any ?query or #hash; decoding fails on bad % escapes, which lands in the 404 path.
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    // Cloud Run startup probe and scripts/smoke.sh.
+    if (pathname === '/health') {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      return res.end('ok');
+    }
     const urlPath = pathname === '/' ? '/index.html' : pathname;
     const filePath = join(root, normalize(urlPath));
     if (!filePath.startsWith(root + sep)) throw new Error('Path escapes root');

@@ -1,58 +1,78 @@
-# Cloud Build: deploy ClearSpeak to Cloud Run on push
-# Uses deploy skill patterns: build cache, BuildKit, dual tagging, E2_HIGHCPU_8
+# One Cloud Build file for every deploy stage (deploy skill, templates/cloudbuild.yaml).
+# A Cloud Build trigger runs it on every push to main. A red test stops the deploy.
+#
+# Order: test || build -> push -> deploy a no-traffic "candidate" revision
+# -> send traffic -> smoke test. A failed step leaves the old revision serving.
+#
+# Bash variables inside args are written $$VAR so Cloud Build leaves them alone.
 
 steps:
+  # The image tag: the commit for trigger builds, _TAG for `gcloud builds submit`.
+  - id: "image-ref"
+    name: "bash"
+    args:
+      - "-c"
+      - |
+        TAG="$COMMIT_SHA"; [ -n "$$TAG" ] || TAG="${_TAG}"
+        [ -n "$$TAG" ] || { echo "No tag: pass _TAG=<git sha>"; exit 1; }
+        echo "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$$TAG" > /workspace/image
+        cat /workspace/image
+
+  # Tests run alongside the build.
   - id: "test"
-    name: "node:22-slim"
-    entrypoint: npm
-    args: ["test"]
+    name: "node:22.23.4-slim"
+    waitFor: ["-"]
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        [ "${_RUN_TESTS}" = "true" ] || exit 0
+        npm test
 
   - id: "build"
     name: "gcr.io/cloud-builders/docker"
-    args:
-      - "build"
-      - "--cache-from"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
-      - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
-      - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
-      - "."
-    env:
-      - "DOCKER_BUILDKIT=1"
+    waitFor: ["image-ref"]
+    entrypoint: bash
+    env: ["DOCKER_BUILDKIT=1"]
+    args: ["-c", "docker build -t \"$$(cat /workspace/image)\" ."]
 
   - id: "push"
     name: "gcr.io/cloud-builders/docker"
-    args:
-      - "push"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
+    waitFor: ["build", "test"]
+    entrypoint: bash
+    args: ["-c", "docker push \"$$(cat /workspace/image)\""]
 
-  - id: "push-latest"
-    name: "gcr.io/cloud-builders/docker"
-    args:
-      - "push"
-      - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
-
+  # An existing service gets a no-traffic revision tagged "candidate".
+  # The very first deploy creates the service with traffic.
   - id: "deploy"
-    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: gcloud
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: bash
     args:
-      - "run"
-      - "deploy"
-      - "${_SERVICE_NAME}"
-      - "--image=gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
-      - "--platform=managed"
-      - "--region=${_REGION}"
-      - "--allow-unauthenticated"
-      - "--memory=256Mi"
-      - "--cpu=1"
-      - "--max-instances=1"
-      - "--min-instances=0"
-      - "--timeout=60"
+      - "-ceu"
+      - |
+        FLAGS=(--image="$$(cat /workspace/image)" --region=${_REGION}
+          --service-account=${_RUNTIME_SA}
+          --memory=${_MEMORY} --cpu=1 --cpu-boost
+          --min-instances=${_MIN_INSTANCES} --max-instances=${_MAX_INSTANCES}
+          --concurrency=${_CONCURRENCY} --timeout=60
+          --startup-probe=httpGet.path=/health,periodSeconds=2,failureThreshold=30
+          --quiet)
+        if gcloud run services describe ${_SERVICE} --region=${_REGION} >/dev/null 2>&1; then
+          gcloud run deploy ${_SERVICE} "$${FLAGS[@]}" --no-traffic --tag=candidate
+        else
+          gcloud run deploy ${_SERVICE} "$${FLAGS[@]}" --allow-unauthenticated
+        fi
 
-images:
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:$COMMIT_SHA"
-  - "gcr.io/$PROJECT_ID/${_SERVICE_NAME}:latest"
+  - id: "promote"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    entrypoint: bash
+    args:
+      - "-ceu"
+      - |
+        [ "${_PROMOTE}" = "true" ] || { echo "Actions promotes"; exit 0; }
+        gcloud run services update-traffic ${_SERVICE} --region=${_REGION} --to-latest
+        URL=$$(gcloud run services describe ${_SERVICE} --region=${_REGION} --format='value(status.url)')
+        bash scripts/smoke.sh "$$URL"
 
 options:
   machineType: "E2_HIGHCPU_8"
@@ -61,5 +81,14 @@ options:
 timeout: 900s
 
 substitutions:
-  _SERVICE_NAME: "clearspeak"
+  _SERVICE: "clearspeak"
   _REGION: "us-central1"
+  _REPO: "clearspeak"                   # Artifact Registry repo
+  _RUNTIME_SA: "clearspeak-run@lifebalance-nuxt.iam.gserviceaccount.com"
+  _MEMORY: "256Mi"
+  _MIN_INSTANCES: "0"
+  _MAX_INSTANCES: "1"
+  _CONCURRENCY: "80"
+  _RUN_TESTS: "true"
+  _PROMOTE: "true"
+  _TAG: ""
