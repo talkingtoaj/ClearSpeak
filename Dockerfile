@@ -1,4 +1,5 @@
-FROM node:22-slim
+# Pinned patch version: a rebuild never changes Node under us. Bump it on purpose.
+FROM node:22.23.4-slim
 
 # Create non-root user for security
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
@@ -20,7 +21,6 @@ USER appuser
 ENV PORT=8080
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s \
-  CMD node -e "require('http').get('http://localhost:'+process.env.PORT+'/', r => r.statusCode===200?process.exit(0):process.exit(1)).on('error',()=>process.exit(1))"
+# No HEALTHCHECK: Cloud Run ignores it. The startup probe on /health is set in cloudbuild.yaml.
 
 CMD ["node", "scripts/start.mjs"]
